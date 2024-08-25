@@ -1,7 +1,19 @@
 ﻿@page "/"
 
 @using Layout
+@using MudBlazorDarkModeToggle.Client.Services
 @layout HomeLayout
+@implements IDisposable
+@inject PersistentComponentState ApplicationState
+@inject IDarkModeService DarkModeService
+@inject NavigationManager NavigationManager
+
+<MudThemeProvider IsDarkMode="@IsDarkMode" />
+
+<MudButton OnClick="NavigateToCounter">Navigate to counter</MudButton>
+
+<MudIconButton Class="mr-1 mt-1 align-self-end" Icon="@(DarkLightModeButtonIcon)" Color="MudBlazor.Color.Inherit" OnClick="@DarkModeSwitched" />
+
 <PageTitle>Home</PageTitle>
 
 <MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
@@ -58,3 +70,55 @@
         More details
     </MudLink>
 </MudText>
+
+@code{
+    private PersistingComponentStateSubscription persistingSubscription;
+
+    private void NavigateToCounter()
+    {
+        NavigationManager.NavigateTo("counter");
+    }
+
+    protected async override Task OnInitializedAsync()
+    {
+        persistingSubscription = ApplicationState.RegisterOnPersisting(PersistIsDarkMode);
+
+        if (!ApplicationState.TryTakeFromJson<bool>("IsDarkMode", out var isDarkMode))
+        {
+            IsDarkMode = await DarkModeService.GetIsDarkMode();
+        }
+        else
+        {
+            IsDarkMode = isDarkMode;
+        }
+
+        IsDarkMode = await DarkModeService.GetIsDarkMode();
+        await base.OnInitializedAsync();
+    }
+
+    private Task PersistIsDarkMode()
+    {
+        ApplicationState.PersistAsJson("IsDarkMode", IsDarkMode);
+
+        return Task.CompletedTask;
+    }
+
+    public string DarkLightModeButtonIcon => IsDarkMode switch
+    {
+        true => Icons.Material.Rounded.DarkMode,
+        false => Icons.Material.Outlined.LightMode,
+    };
+
+    private bool IsDarkMode { get; set; }
+
+    private async Task DarkModeSwitched(MouseEventArgs args)
+    {
+        IsDarkMode = !IsDarkMode;
+        await DarkModeService.SetIsDarkMode(IsDarkMode);
+    }
+
+    public void Dispose()
+    {
+        persistingSubscription.Dispose();
+    }
+}

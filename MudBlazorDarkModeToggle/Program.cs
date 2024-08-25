@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
 using MudBlazorDarkModeToggle.Client.Pages;
+using MudBlazorDarkModeToggle.Client.Services;
 using MudBlazorDarkModeToggle.Components;
 using MudBlazorDarkModeToggle.Components.Account;
 using MudBlazorDarkModeToggle.Data;
+using MudBlazorDarkModeToggle.Endpoints;
+using MudBlazorDarkModeToggle.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +44,9 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
+builder.Services.AddScoped<DarkModeState>();
+builder.Services.AddScoped<IDarkModeService, ServerDarkModeService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -68,5 +74,7 @@ app.MapRazorComponents<App>()
 
 // Add additional endpoints required by the Identity /Account Razor components.
 app.MapAdditionalIdentityEndpoints();
+
+app.MapDarkModeEndpoints();
 
 app.Run();
