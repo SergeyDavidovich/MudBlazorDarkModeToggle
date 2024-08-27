@@ -1,4 +1,4 @@
-##  MudBlazorDarkModeToggle 1
+##  MudBlazorDarkModeToggle
 ## Description: 
 The project is designed to configure dark mode switching in the MudBlazor web application.
 
