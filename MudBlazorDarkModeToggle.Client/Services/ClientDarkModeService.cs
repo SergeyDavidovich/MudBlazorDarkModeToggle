@@ -21,7 +21,7 @@ namespace MudBlazorDarkModeToggle.Client.Services
             using StringContent jsonContent = new(
                 JsonSerializer.Serialize(new
                 {
-                    isDarkMode = isDarkMode
+                    isDarkMode
                 }),
                 Encoding.UTF8,
                 "application/json");

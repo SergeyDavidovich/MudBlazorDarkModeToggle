@@ -44,8 +44,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
-builder.Services.AddSingleton<DarkModeState>();
-builder.Services.AddSingleton<IDarkModeService, ServerDarkModeService>();
+builder.Services.AddScoped<DarkModeState>();
+builder.Services.AddScoped<IDarkModeService, ServerDarkModeService>();
 
 var app = builder.Build();
 
