@@ -1,7 +1,20 @@
 ﻿@page "/"
 
+@using BitzArt.Blazor.Cookies
 @using Layout
+@using System.Runtime.InteropServices
 @layout HomeLayout
+@implements IDisposable
+@inject NavigationManager NavigationManager
+@inject ICookieService CookieService
+@inject PersistentComponentState ApplicationState
+
+<MudThemeProvider IsDarkMode="_isDarkMode" />
+
+<MudButton OnClick="NavigateToCounter">Navigate to counter</MudButton>
+
+<MudIconButton Icon="@(DarkLightModeButtonIcon)" Color="MudBlazor.Color.Inherit" OnClick="@DarkModeToggle" />
+
 <PageTitle>Home</PageTitle>
 
 <MudText Typo="Typo.h3" GutterBottom="true">Hello, world!</MudText>
@@ -58,3 +71,59 @@
         More details
     </MudLink>
 </MudText>
+
+@code {
+    private PersistingComponentStateSubscription persistingSubscription;
+    private bool _isDarkMode = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        persistingSubscription = ApplicationState.RegisterOnPersisting(PersistIsDarkMode);
+
+        if (!ApplicationState.TryTakeFromJson<bool>("IsDarkMode", out var isDarkMode))
+        {
+            var cookie = await CookieService.GetAsync("IsDarkMode");
+            if (cookie is null)
+            {
+                _isDarkMode = false;
+            }
+            else
+            {
+                _isDarkMode = bool.Parse(cookie.Value);
+            }
+        }
+        else
+        {
+            _isDarkMode = isDarkMode;
+        }
+    }
+
+    private Task PersistIsDarkMode()
+    {
+        ApplicationState.PersistAsJson("IsDarkMode", _isDarkMode);
+
+        return Task.CompletedTask;
+    }
+
+    private void NavigateToCounter()
+    {
+        NavigationManager.NavigateTo("/counter");
+    }
+
+    private async Task DarkModeToggle()
+    {
+        _isDarkMode = !_isDarkMode;
+        await CookieService.SetAsync("IsDarkMode", _isDarkMode.ToString(), new DateTimeOffset(DateTime.MaxValue));
+    }
+
+    public string DarkLightModeButtonIcon => _isDarkMode switch
+    {
+        true => Icons.Material.Rounded.DarkMode,
+        false => Icons.Material.Outlined.LightMode,
+    };
+
+    public void Dispose()
+    {
+        persistingSubscription.Dispose();
+    }
+}
