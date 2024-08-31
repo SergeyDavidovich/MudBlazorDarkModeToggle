@@ -42,5 +42,5 @@ link on how to persist the state after pre-rendering - https://learn.microsoft.c
 await CookieService.SetAsync("IsDarkMode", _isDarkMode.ToString(), new DateTimeOffset(DateTime.MaxValue));
 ```
 
-You need to repeat this steps in `MainLayout.razor` component since this component is root component for all other components in our application.
+You need to repeat this steps in `MainLayout.razor` component since this is root component for all other components in our application.
 In this component we have `MudThemeProvider` to which we set `IsDarkMode` value and so it apply dark mode to children components
