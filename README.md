@@ -17,6 +17,8 @@ Created using the MudBlazor CLI:
 1. Install NuGet that works with cookies using this link - https://github.com/BitzArt/Blazor.Cookies?tab=readme-ov-file#installation
 2. Inject `ICookieService` into `Home.razor` and retrive the **dark mode** from the cookies this way:
 > Here `_isDarkMode` is variable that is binded to `MudThemeProvider`'s `IsDarkMode` value
+
+> `CookieService` is inject into your component
 ```
 var cookie = await CookieService.GetAsync("IsDarkMode");
 if (cookie is null)
@@ -39,3 +41,6 @@ link on how to persist the state after pre-rendering - https://learn.microsoft.c
 ```
 await CookieService.SetAsync("IsDarkMode", _isDarkMode.ToString(), new DateTimeOffset(DateTime.MaxValue));
 ```
+
+You need to repeat this steps in `MainLayout.razor` component since this component is root component for all other components in our application.
+In this component we have `MudThemeProvider` to which we set `IsDarkMode` value and so it apply dark mode to children components
