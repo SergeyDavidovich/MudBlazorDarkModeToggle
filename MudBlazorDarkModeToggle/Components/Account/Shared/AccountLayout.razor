@@ -1,19 +1,30 @@
-﻿@inherits LayoutComponentBase
-@layout MudBlazorDarkModeToggle.Client.Layout.MainLayout
+﻿@using BitzArt.Blazor.Cookies
+@using MudBlazorDarkModeToggle.Client.Layout
+@inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
+@implements IDisposable
+@inject ICookieService CookieService
+@inject PersistentComponentState ApplicationState
 
-@if (HttpContext is null)
-{
-    <p>Loading...</p>
-}
-else
-{
-    @Body
-}
+<MudThemeProvider IsDarkMode="_isDarkMode" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h5" Class="ml-3">Application</MudText>
+    </MudAppBar>
+    <MudMainContent Class="mt-16 pa-4">
+        @Body
+    </MudMainContent>
+</MudLayout>
 
 @code {
     [CascadingParameter]
     private HttpContext? HttpContext { get; set; }
+
+    private PersistingComponentStateSubscription persistingSubscription;
+    private bool _isDarkMode = false;
 
     protected override void OnParametersSet()
     {
@@ -24,5 +35,51 @@ else
             // must transition back from interactive mode to a server-rendered page.
             NavigationManager.Refresh(forceReload: true);
         }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        persistingSubscription = ApplicationState.RegisterOnPersisting(PersistIsDarkMode);
+
+        if (!ApplicationState.TryTakeFromJson<bool>("IsDarkMode", out var isDarkMode))
+        {
+            var cookie = await CookieService.GetAsync("IsDarkMode");
+            if (cookie is null)
+            {
+                _isDarkMode = false;
+            }
+            else
+            {
+                _isDarkMode = bool.Parse(cookie.Value);
+            }
+        }
+        else
+        {
+            _isDarkMode = isDarkMode;
+        }
+    }
+
+    private Task PersistIsDarkMode()
+    {
+        ApplicationState.PersistAsJson("IsDarkMode", _isDarkMode);
+
+        return Task.CompletedTask;
+    }
+
+    public string DarkLightModeButtonIcon => _isDarkMode switch
+    {
+        true => Icons.Material.Rounded.DarkMode,
+        false => Icons.Material.Outlined.LightMode,
+    };
+
+    private async Task DarkModeToggle()
+    {
+        _isDarkMode = !_isDarkMode;
+        await CookieService.SetAsync("IsDarkMode", _isDarkMode.ToString(), DateTime.UtcNow.AddYears(10));
+    }
+
+    public void Dispose()
+    {
+        persistingSubscription.Dispose();
     }
 }
